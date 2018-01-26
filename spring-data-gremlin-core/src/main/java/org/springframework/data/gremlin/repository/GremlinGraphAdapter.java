@@ -118,4 +118,8 @@ public class GremlinGraphAdapter<G extends Graph> {
     public boolean isValidId(String id) {
         return !StringUtils.isEmpty(id);
     }
+
+    public String getClassName(Element element) {
+        return null;
+    }
 }

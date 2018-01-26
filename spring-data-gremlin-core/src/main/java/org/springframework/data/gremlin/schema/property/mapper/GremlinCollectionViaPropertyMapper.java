@@ -102,12 +102,13 @@ public class GremlinCollectionViaPropertyMapper extends GremlinLinkPropertyMappe
 
     @Override
     public <K> Object loadFromVertex(GremlinRelatedProperty property, GremlinGraphAdapter graphAdapter, Vertex vertex, Map<Object, Object> cascadingSchemas) {
-        return loadCollection(property.getRelatedSchema(), property, graphAdapter, vertex, cascadingSchemas);
+        return loadCollection(property, graphAdapter, vertex, cascadingSchemas);
     }
 
-    private <V> Set<V> loadCollection(GremlinSchema<V> schema, GremlinRelatedProperty property, GremlinGraphAdapter graphAdapter, Vertex vertex, Map<Object, Object> cascadingSchemas) {
-        Set<V> collection = new HashSet<V>();
-        for (Edge linkedEdge : vertex.getEdges(property.getDirection(), property.getRelatedSchema().getClassName())) {
+    private <V> Set<V> loadCollection(GremlinRelatedProperty<V> property, GremlinGraphAdapter graphAdapter, Vertex vertex, Map<Object, Object> cascadingSchemas) {
+        Set<V> collection = new HashSet<>();
+        GremlinSchema<V> schema = property.getRelatedSchema();
+        for (Edge linkedEdge : vertex.getEdges(property.getDirection(), schema.getClassName())) {
             graphAdapter.refresh(linkedEdge);
             V linkedObject = schema.cascadeLoadFromGraph(graphAdapter, linkedEdge, cascadingSchemas);
             collection.add(linkedObject);

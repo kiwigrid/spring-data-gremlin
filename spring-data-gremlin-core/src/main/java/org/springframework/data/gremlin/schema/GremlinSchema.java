@@ -23,6 +23,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * <p>
@@ -47,6 +48,7 @@ public abstract class GremlinSchema<V> {
 
     private final Class<V> classType;
     private final GremlinSchema<? super V> superSchema;
+    private Map<String, GremlinSchema<? extends V>> inheritedClassSchemaMapping;
     private boolean isAbstract;
 
     private String className;
@@ -138,8 +140,11 @@ public abstract class GremlinSchema<V> {
         return propertyMap.get(property).getAccessor();
     }
 
-    public Collection<GremlinProperty> getProperties() {
-        return properties;
+    public Stream<GremlinProperty> getPropertyStream() {
+        if (superSchema != null) {
+            return Stream.concat(superSchema.getPropertyStream(), properties.stream());
+        }
+        return properties.stream();
     }
 
     public String getClassName() {
@@ -197,8 +202,7 @@ public abstract class GremlinSchema<V> {
         }
         noCascadingMap.put(obj, element);
 
-        for (GremlinProperty property : getProperties()) {
-
+        getPropertyStream().forEach(property -> {
             try {
 
                 GremlinPropertyAccessor accessor = property.getAccessor();
@@ -210,7 +214,7 @@ public abstract class GremlinSchema<V> {
             } catch (RuntimeException e) {
                 LOGGER.warn(String.format("Could not save property %s of %s", property, obj.toString()), e);
             }
-        }
+        });
 
         if (getGraphId(obj) == null && TransactionSynchronizationManager.isSynchronizationActive()) {
             final Element finalElement = element;
@@ -244,6 +248,13 @@ public abstract class GremlinSchema<V> {
         if (obj != null) {
             return obj;
         }
+        String className = graphAdapter.getClassName(element);
+        GremlinSchema<? extends V> schema = findMostSpecificSchema(className);
+        return schema.specificCascadeLoadFromGraph(graphAdapter, element, noCascadingMap);
+    }
+
+    private V specificCascadeLoadFromGraph(GremlinGraphAdapter graphAdapter, Element element, Map<Object, Object> noCascadingMap) {
+        V obj;
         initProxy();
         try {
             obj = proxyClass.newInstance();
@@ -304,12 +315,19 @@ public abstract class GremlinSchema<V> {
         this.isAbstract = isAbstract;
     }
 
+    public void addInheritedSchema(GremlinSchema<? extends V> gremlinSchema) {
+        if (inheritedClassSchemaMapping == null) {
+            inheritedClassSchemaMapping = new HashMap<>();
+        }
+        inheritedClassSchemaMapping.put(gremlinSchema.getClassName(), gremlinSchema);
+    }
+
     @Override
     public String toString() {
         return "GremlinSchema{"
-                + "className='" + className + '\''
-                + ", classType=" + classType +
-                '}';
+            + "className='" + className + '\''
+            + ", classType=" + classType +
+            '}';
     }
 
     @Override
@@ -325,5 +343,24 @@ public abstract class GremlinSchema<V> {
     @Override
     public int hashCode() {
         return classType.hashCode();
+    }
+
+    public GremlinSchema<? extends V> findMostSpecificSchema(Class<?> aClass) {
+        if (inheritedClassSchemaMapping == null) {
+            return this;
+        }
+        for (GremlinSchema<? extends V> schema : inheritedClassSchemaMapping.values()) {
+            if (schema.getClassType().isAssignableFrom(aClass)) {
+                return schema.findMostSpecificSchema(aClass);
+            }
+        }
+        return this;
+    }
+
+    public GremlinSchema<? extends V> findMostSpecificSchema(String className) {
+        if (inheritedClassSchemaMapping == null || className == null) {
+            return this;
+        }
+        return inheritedClassSchemaMapping.getOrDefault(className, this);
     }
 }

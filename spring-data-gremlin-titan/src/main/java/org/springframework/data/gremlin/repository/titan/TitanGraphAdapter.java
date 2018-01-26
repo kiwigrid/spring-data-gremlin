@@ -1,6 +1,8 @@
 package org.springframework.data.gremlin.repository.titan;
 
 import com.thinkaurelius.titan.core.TitanGraph;
+import com.thinkaurelius.titan.graphdb.vertices.CacheVertex;
+import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.Vertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,14 @@ public class TitanGraphAdapter extends GremlinGraphAdapter<TitanGraph> {
     public Vertex createVertex(TitanGraph graph, String className) {
         Vertex vertex = graph.addVertexWithLabel(className);
         return vertex;
+    }
+
+    @Override
+    public String getClassName(Element element) {
+        if (element instanceof CacheVertex){
+            return ((CacheVertex) element).getLabel();
+        }
+        return super.getClassName(element);
     }
 
 }

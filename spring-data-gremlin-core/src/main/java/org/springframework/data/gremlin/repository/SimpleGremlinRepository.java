@@ -63,7 +63,7 @@ public class SimpleGremlinRepository<T> implements GremlinRepository<T> {
     //        return element;
     //    }
 
-    private Element create(Graph graph, final T object, Object... noCascade) {
+    private Element create(GremlinSchema<? extends T> schema, Graph graph, final T object, Object... noCascade) {
         Element element;
         if (schema.isVertexSchema()) {
             element = graphAdapter.createVertex(graph, schema.getClassName());
@@ -99,10 +99,14 @@ public class SimpleGremlinRepository<T> implements GremlinRepository<T> {
 
     @Transactional(readOnly = false)
     public T save(Graph graph, T object, Object... noCascade) {
+        GremlinSchema<? extends T> schema = this.schema.findMostSpecificSchema(object.getClass());
+        return save(schema, graph, object, noCascade);
+    }
 
+    public T save(GremlinSchema<? extends T> schema, Graph graph, T object, Object... noCascade) {
         String id = schema.getObjectId(object);
         if (StringUtils.isEmpty(id)) {
-            create(graph, object);
+            create(schema, graph, object);
         } else {
             Element element;
             if (schema.isVertexSchema()) {
@@ -131,14 +135,15 @@ public class SimpleGremlinRepository<T> implements GremlinRepository<T> {
 
         Graph graph = dbf.graph();
 
+        GremlinSchema<? extends T> schema = this.schema.findMostSpecificSchema(s.getClass());
         String id = schema.getObjectId(s);
         if (graphAdapter.isValidId(id)) {
             if (!LazyInitializationHandler.isInitialized(s)) {
                 return s;
             }
-            save(graph, s, noCascade);
+            save(schema, graph, s, noCascade);
         } else {
-            create(graph, s, noCascade);
+            create(schema, graph, s, noCascade);
 
             if (TransactionSynchronizationManager.isSynchronizationActive()) {
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
@@ -177,6 +182,8 @@ public class SimpleGremlinRepository<T> implements GremlinRepository<T> {
         }
 
         if (element != null) {
+            String className = graphAdapter.getClassName(element);
+            GremlinSchema<? extends T> schema = this.schema.findMostSpecificSchema(className);
             object = schema.loadFromGraph(graphAdapter, element);
         }
 

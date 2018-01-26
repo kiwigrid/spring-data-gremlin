@@ -663,4 +663,22 @@ public abstract class AbstractPersonRepositoryTest extends BaseRepositoryTest {
         assertNotNull(result.getOtherStuff());
         assertEquals(2, result.getOtherStuff().size());
     }
+
+	@Test
+	public void saveExtendedPerson() {
+		ExtendedPerson person = new ExtendedPerson("Sasa", "Brown");
+		House house = new House();
+		house.setRooms(4);
+
+		person.setOwns(house);
+		String id = repository.save(person).getId();
+
+		Person result = repository.findOne(id);
+
+        assertTrue("Not instance of ExtendedPerson", result instanceof ExtendedPerson);
+		assertEquals(person.getFirstName(), result.getFirstName());
+		assertEquals(person.getLastName(), result.getLastName());
+		assertNotNull(result.getOwns());
+		assertEquals(4, result.getOwns().getRooms());
+	}
 }

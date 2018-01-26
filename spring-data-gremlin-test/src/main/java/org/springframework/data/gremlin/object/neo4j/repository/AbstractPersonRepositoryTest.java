@@ -506,4 +506,21 @@ public abstract class AbstractPersonRepositoryTest extends BaseRepositoryTest {
         assertTrue("TOC was not serialized properly", toc);
     }
 
+	@Test
+	public void saveExtendedPerson() {
+		ExtendedPerson person = new ExtendedPerson("Sasa", "Brown");
+		House house = new House();
+		house.setRooms(4);
+
+		person.setOwns(house);
+		String id = repository.save(person).getId();
+
+		ExtendedPerson result = (ExtendedPerson) repository.findOne(id);
+
+		assertEquals(result.getFirstName(), person.getFirstName());
+		assertEquals(result.getLastName(), person.getLastName());
+		assertNotNull(result.getOwns());
+		assertEquals(4, result.getOwns().getRooms());
+	}
+
 }

@@ -1,5 +1,6 @@
 package org.springframework.data.gremlin.repository.tinker;
 
+import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 import org.slf4j.Logger;
@@ -20,6 +21,14 @@ public class TinkerGraphAdapter extends GremlinGraphAdapter<TinkerGraph> {
         Vertex vertex = graph.addVertex(null);
         vertex.setProperty("label", className);
         return vertex;
+    }
+
+    @Override
+    public String getClassName(Element element) {
+        if (element instanceof Vertex){
+            return element.getProperty("label");
+        }
+        return super.getClassName(element);
     }
 
 }

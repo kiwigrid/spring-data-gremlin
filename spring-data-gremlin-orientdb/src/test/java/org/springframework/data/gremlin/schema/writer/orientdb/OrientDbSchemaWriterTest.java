@@ -21,7 +21,7 @@ import org.springframework.data.gremlin.schema.property.GremlinProperty;
 import org.springframework.data.gremlin.schema.writer.SchemaWriter;
 import org.springframework.data.gremlin.tx.orientdb.OrientDBGremlinGraphFactory;
 
-import java.util.Arrays;
+import java.util.stream.Stream;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -77,7 +77,7 @@ public class OrientDbSchemaWriterTest {
 
         GremlinProperty property1 = new GremlinProperty(String.class, "bla");
 
-        when(schema.getProperties()).thenReturn(Arrays.asList(property1));
+        when(schema.getPropertyStream()).thenReturn(Stream.of(property1));
 
         writer.writeSchema(dbf, schema);
         verify(oSchema).getOrCreateClass("ClassName", v);
@@ -95,7 +95,7 @@ public class OrientDbSchemaWriterTest {
 
         GremlinProperty property1 = new GremlinProperty(String.class, "bla");
         property1.setIndex(Index.IndexType.UNIQUE);
-        when(schema.getProperties()).thenReturn(Arrays.asList(property1));
+        when(schema.getPropertyStream()).thenReturn(Stream.of(property1));
 
 
         OrientVertexType.OrientVertexProperty blaProp = Mockito.mock(OrientVertexType.OrientVertexProperty.class);
@@ -127,7 +127,7 @@ public class OrientDbSchemaWriterTest {
         when(oSchema.getOrCreateClass("TestEntity", v)).thenReturn(linkClass);
 
         property3.setRelatedSchema(relatedSchema);
-        when(schema.getProperties()).thenReturn(Arrays.asList(property3));
+        when(schema.getPropertyStream()).thenReturn(Stream.of(property3));
 
         OClass outClazz = Mockito.mock(OClass.class);
         when(oSchema.getOrCreateClass("link", e)).thenReturn(outClazz);
@@ -186,7 +186,7 @@ public class OrientDbSchemaWriterTest {
         OProperty inProperty = Mockito.mock(OProperty.class);
         when(linkEdge.createProperty("in", OType.LINK)).thenReturn(inProperty);
 
-        when(schema.getProperties()).thenReturn(Arrays.asList(property1, property2));
+        when(schema.getPropertyStream()).thenReturn(Stream.of(property1, property2));
 
         writer.writeSchema(dbf, schema);
         verify(oSchema).getOrCreateClass("ClassName", v);

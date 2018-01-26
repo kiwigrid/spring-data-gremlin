@@ -10,6 +10,7 @@ import org.springframework.data.gremlin.schema.property.GremlinRelatedProperty;
 import org.springframework.data.gremlin.tx.GremlinGraphFactory;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import static org.springframework.data.gremlin.schema.property.GremlinRelatedProperty.CARDINALITY;
@@ -67,7 +68,8 @@ public abstract class AbstractSchemaWriter<V extends BASE, E extends BASE, P, BA
     private void writeProperties(BASE elementClass, GremlinSchema<?> schema) {
         GremlinProperty latitude = null;
         GremlinProperty longitude = null;
-        for (GremlinProperty property : schema.getProperties()) {
+        for (Iterator<GremlinProperty> iterator = schema.getPropertyStream().iterator(); iterator.hasNext(); ) {
+            GremlinProperty property = iterator.next();
 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("CREATING Property: " + property.getName());

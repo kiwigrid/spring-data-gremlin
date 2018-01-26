@@ -15,7 +15,7 @@ import static org.junit.Assert.fail;
 /**
  * Created by gman on 30/07/15.
  */
-public class AbstractTransactionRepositoryTest extends BaseRepositoryTest {
+public abstract class AbstractTransactionRepositoryTest extends BaseRepositoryTest {
 
     @Test
     public void should_rollback() {

@@ -70,16 +70,14 @@ public abstract class GremlinRelatedProperty<C> extends GremlinProperty<C> {
 
         if (relatedSchema.isEdgeSchema()) {
 
-            for (Object propertyOfRelatedSchema : relatedSchema.getProperties()) {
-                if (propertyOfRelatedSchema instanceof GremlinAdjacentProperty) {
-                    // If the property has the same direction of the given property here it
-                    // means it is the opposite property of the @EntityRelationship
-                    if (((GremlinAdjacentProperty) propertyOfRelatedSchema).getDirection() == direction.opposite()) {
-                        adjacentProperty = (GremlinAdjacentProperty) propertyOfRelatedSchema;
-                        break;
-                    }
-                }
-            }
+            // If the property has the same direction of the given property here it
+            // means it is the opposite property of the @EntityRelationship
+            adjacentProperty = relatedSchema.getPropertyStream()
+                .filter(propertyOfRelatedSchema -> propertyOfRelatedSchema instanceof GremlinAdjacentProperty)
+                .filter(propertyOfRelatedSchema -> ((GremlinAdjacentProperty) propertyOfRelatedSchema).getDirection() == direction.opposite())
+                .findFirst()
+                .map(propertyOfRelatedSchema -> (GremlinAdjacentProperty) propertyOfRelatedSchema)
+                .orElse(adjacentProperty);
         }
     }
 

@@ -6,7 +6,6 @@ import javassist.util.proxy.ProxyObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.gremlin.repository.GremlinGraphAdapter;
-import org.springframework.data.gremlin.schema.property.GremlinProperty;
 import org.springframework.data.gremlin.schema.property.accessor.GremlinPropertyAccessor;
 
 import java.lang.reflect.Method;
@@ -72,7 +71,7 @@ public class LazyInitializationHandler implements MethodHandler {
         } catch (Exception e) {
             throw new IllegalStateException("Could not instantiate new " + schema.getClassType(), e);
         }
-        for (GremlinProperty property : schema.getProperties()) {
+        schema.getPropertyStream().forEach(property -> {
             LOGGER.trace("Load property {}::{} of {}", schema.getClassType(), property.getName(), element.getId());
             Object val = property.loadFromVertex(graphAdapter, element, noCascadingMap);
             GremlinPropertyAccessor accessor = property.getAccessor();
@@ -81,7 +80,7 @@ public class LazyInitializationHandler implements MethodHandler {
             } catch (Exception e) {
                 LOGGER.warn("Could not load property {} of {}", property, self.toString(), e);
             }
-        }
+        });
         LOGGER.debug("Finished proxy initialization of {}:{}", schema.getClassName(), element.getId());
     }
 

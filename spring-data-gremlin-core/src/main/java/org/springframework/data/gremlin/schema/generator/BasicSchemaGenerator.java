@@ -83,8 +83,12 @@ public class BasicSchemaGenerator implements SchemaGenerator {
         if (superClass != Object.class && (isVertexClass(superClass) || isEdgeClass(superClass))) {
             superSchema = generateSchema(superClass);
         }
+        //noinspection unchecked
+        schema = (GremlinSchema<V>) schemaMap.get(clazz);
+        if (schema != null) {
+            return schema;
+        }
         String className = getVertexName(clazz);
-
         schema = createSchema(clazz, superSchema);
         schema.setClassName(className);
         schema.setIdEncoder(idEncoder);
@@ -103,6 +107,12 @@ public class BasicSchemaGenerator implements SchemaGenerator {
             throw new SchemaGeneratorException("Could not generate Schema for " + clazz.getSimpleName() + ". No @Id idField found.");
         }
         schemaMap.put(clazz, schema);
+        for (Class<?> vertexClass : vertexClasses) {
+            if (vertexClass != clazz && clazz.isAssignableFrom(vertexClass)){
+                //noinspection unchecked
+                schema.addInheritedSchema(generateSchema((Class<V>) vertexClass));
+            }
+        }
         return schema;
     }
 
